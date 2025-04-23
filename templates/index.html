@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高校推荐</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .input-container {
+            background: white;
+            padding: 30px;
+            border-radius: 18px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        input {
+            width: 200px;
+            padding: 12px 16px;
+            font-size: 17px;
+            border: 1px solid #d2d2d7;
+            border-radius: 12px;
+            margin-right: 10px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            border-color: #0071e3;
+            box-shadow: 0 0 0 4px rgba(0,113,227,0.15);
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 17px;
+            background-color: #0071e3;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background-color: #0077ED;
+        }
+
+        .results {
+            margin-top: 30px;
+        }
+
+        .school-card {
+            background: white;
+            padding: 24px;
+            margin: 16px 0;
+            border-radius: 18px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .school-card h3 {
+            font-size: 20px;
+            margin-bottom: 12px;
+            color: #1d1d1f;
+        }
+
+        .school-card p {
+            font-size: 15px;
+            color: #515154;
+            margin: 8px 0;
+            line-height: 1.4;
+        }
+
+        .majors {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #d2d2d7;
+        }
+
+        .major-tag {
+            display: inline-block;
+            padding: 6px 12px;
+            margin: 4px;
+            background-color: #f5f5f7;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #1d1d1f;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 20px 16px;
+            }
+
+            input {
+                width: 100%;
+                margin: 0 0 16px 0;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>高校推荐</h1>
+    <div class="input-container">
+        <input type="number" id="score" placeholder="输入分数" min="0" max="750">
+        <button onclick="getRecommendations()">获取推荐</button>
+    </div>
+    <div id="results" class="results"></div>
+
+    <script>
+        async function getRecommendations() {
+            const scoreInput = document.getElementById('score');
+            const score = scoreInput.value;
+            const resultsDiv = document.getElementById('results');
+
+            if (!score || score < 0 || score > 750) {
+                alert('请输入有效的分数（0-750）');
+                return;
+            }
+
+            resultsDiv.innerHTML = '<div style="text-align: center; color: #86868b; padding: 20px;">正在查询...</div>';
+
+            try {
+                // 1. 首先获取学校推荐
+                const response = await fetch('http://localhost:5003/api/recommend', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ score: parseFloat(score) })
+                });
+
+                const data = await response.json();
+                
+                if (data.success && data.data && data.data.length > 0) {
+                    // 2. 对每个学校获取专业推荐
+                    const schoolsWithMajors = await Promise.all(data.data.map(async school => {
+                        try {
+                            // 调用 Coze API 获取专业推荐
+                            const cozeResponse = await fetch('https://api.coze.cn/v1/chat/completions', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': 'Bearer pat_dfv507axB43FHX3R7Y4hsJHZdPdgfXNJGGx3yPIH9yFwP1FRdZJG3jrkBkkkTBNS'
+                                },
+                                body: JSON.stringify({
+                                    messages: [{
+                                        role: "user",
+                                        content: `请根据以下信息推荐3个适合的专业：
+                                        学校：${school.院校名称}
+                                        高考分数：${score}分
+                                        请只返回专业名称，用逗号分隔。`
+                                    }],
+                                    model: "YOUR_COZE_BOT_ID"
+                                })
+                            });
+                            
+                            const cozeData = await cozeResponse.json();
+                            // 解析 Coze 返回的专业推荐，假设返回格式为：专业1,专业2,专业3
+                            const recommendedMajors = cozeData.choices[0].message.content.split(',').map(m => m.trim());
+                            
+                            return {
+                                ...school,
+                                推荐专业: recommendedMajors
+                            };
+                        } catch (error) {
+                            console.error('获取专业推荐失败:', error);
+                            return {
+                                ...school,
+                                推荐专业: ['暂无专业推荐']
+                            };
+                        }
+                    }));
+                    
+                    displayResults(schoolsWithMajors);
+                } else {
+                    resultsDiv.innerHTML = '<div style="text-align: center; color: #86868b; padding: 20px;">未找到符合条件的院校</div>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultsDiv.innerHTML = `<div style="text-align: center; color: #86868b; padding: 20px;">请求失败：${error.message || '未知错误'}</div>`;
+            }
+        }
+
+        function displayResults(schools) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+
+            schools.forEach(school => {
+                // 处理推荐专业数据，确保它是数组
+                let majors = [];
+                if (typeof school.推荐专业 === 'string') {
+                    // 如果是字符串，按逗号分割
+                    majors = school.推荐专业.split(',').map(m => m.trim());
+                } else if (Array.isArray(school.推荐专业)) {
+                    // 如果已经是数组，直接使用
+                    majors = school.推荐专业;
+                }
+
+                const majorsHtml = majors.map(major => 
+                    `<span class="major-tag">${major}</span>`
+                ).join('');
+
+                resultsDiv.innerHTML += `
+                    <div class="school-card">
+                        <h3>${school.院校名称}</h3>
+                        <p>省份：${school.省份}</p>
+                        <p>专业组：${school.专业组名称}</p>
+                        <p>投档线：${school.投档线}</p>
+                        <p>最低投档排名：${school.最低投档排名}</p>
+                        <div class="majors">
+                            <p>推荐专业：</p>
+                            ${majorsHtml}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>
