@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify, render_template, make_response
 import pandas as pd
 import random
 import os
+import requests
+import json
 
 app = Flask(__name__)
 
@@ -37,6 +39,28 @@ def recommend_schools():
             }), 400
 
         score = float(data['score'])
+        
+        # 调用 Coze API 获取专业推荐
+        coze_api_url = "https://www.coze.cn/api/bot/7468844821910732811/chat"
+        coze_api_key = "31598184177659832668647567879445.app.coze"
+        
+        headers = {
+            "Authorization": f"Bearer {coze_api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        coze_payload = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": f"我的高考分数是{score}分，请推荐适合我的专业，并说明原因。"
+                }
+            ]
+        }
+        
+        # 发送请求到Coze
+        coze_response = requests.post(coze_api_url, headers=headers, json=coze_payload)
+        major_recommendations = coze_response.json()
         
         # 设置分数范围（±2.5分）
         score_min = score - 2.5
@@ -77,7 +101,8 @@ def recommend_schools():
 
         return jsonify({
             'success': True,
-            'data': result
+            'data': result,
+            'major_recommendations': major_recommendations
         })
         
     except Exception as e:
