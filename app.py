@@ -6,7 +6,7 @@ from services.ai_service import AIRecommendationService
 app = Flask(__name__)
 
 # 初始化AI服务
-ai_service = AIRecommendationService(api_key="YOUR_API_KEY")
+# ai_service = AIRecommendationService()
 
 # 检查并创建示例数据
 if not os.path.exists('schools.csv'):

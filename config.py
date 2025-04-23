@@ -1,5 +1,6 @@
 import os
 
 class Config:
-    LINK_AI_API_KEY = os.getenv('LINK_AI_API_KEY', 'Link_FgZOcjuxKoUKzeEMFUlLI9kjDbUeoXEkc0MCwwAiCB')
-    LINK_AI_API_URL = os.getenv('LINK_AI_API_URL', 'https://link-ai.tech/app/UUwryw2c?share=ooO8VC')
+    # 替换为您从 LinkAI 控制台获取的实际 API Key
+    LINK_AI_API_KEY = "Link_OQlcfg3QWyAzjpPZmLGAQHONLJKZN506oQcpgQSVZO"  
+    LINK_AI_API_URL = "https://api.link-ai.tech/v1/chat/completions"

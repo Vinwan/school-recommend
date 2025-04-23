@@ -1,89 +1,74 @@
 import requests
-import json
-from typing import Dict, Any, Optional
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import Config
+import logging
 
 class AIRecommendationService:
     def __init__(self):
         self.api_key = Config.LINK_AI_API_KEY
         self.api_url = Config.LINK_AI_API_URL
         
-    def get_major_recommendations(self, score: float) -> Dict[str, Any]:
-        """
-        通过 LinkAI 获取专业推荐
-        Args:
-            score: 高考分数
-        Returns:
-            Dict 包含推荐结果
-        """
+        # 配置重试策略
+        retry_strategy = Retry(
+            total=3,  # 最多重试3次
+            backoff_factor=1,  # 重试间隔时间
+            status_forcelist=[429, 500, 502, 503, 504]  # 需要重试的HTTP状态码
+        )
+        
+        # 创建会话并应用重试策略
+        self.session = requests.Session()
+        self.session.mount("https://", HTTPAdapter(max_retries=retry_strategy))
+        
+    def get_major_recommendations(self, score: float):
+        """获取专业推荐"""
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.api_key}"
+        }
+        
+        body = {
+            "app_code": "UUwryw2c",  # 请替换为您的实际 app_code
+            "messages": [
+                {
+                    "role": "user",
+                    "content": f"我的高考分数是{score}分，请推荐5个适合的大学专业。对每个专业请详细说明：1.专业名称 2.就业方向"
+                }
+            ]
+        }
+        
         try:
-            headers = {
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json"
-            }
+            print(f"正在发送请求到 LinkAI，分数：{score}")
+            print(f"请求头：{headers}")
+            print(f"请求体：{body}")
             
-            payload = {
-                "model": "gpt-3.5-turbo",  # LinkAI 支持的模型
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": "你是一个专业的高考志愿填报顾问，请根据考生分数推荐合适的专业。"
-                    },
-                    {
-                        "role": "user",
-                        "content": f"我的高考分数是{score}分，请推荐5个适合的大学专业。对每个专业请详细说明：1.专业名称 2.推荐理由 3.就业方向 4.未来发展前景"
-                    }
-                ],
-                "temperature": 0.7,
-                "stream": False
-            }
+            # 使用会话发送请求
+            response = self.session.post(self.api_url, json=body, headers=headers, timeout=30)
+            print(f"API 响应状态码：{response.status_code}")
+            print(f"API 响应内容：{response.text}")
             
-            response = requests.post(
-                self.api_url,
-                headers=headers,
-                json=payload,
-                timeout=15
-            )
-            response.raise_for_status()
-            
-            result = response.json()
-            
-            # 处理 LinkAI 的响应格式
-            if 'choices' in result and len(result['choices']) > 0:
-                recommendations = result['choices'][0]['message']['content']
+            if response.status_code == 200:
+                reply_text = response.json().get("choices")[0]['message']['content']
                 return {
                     "success": True,
-                    "data": recommendations
+                    "data": reply_text
                 }
             else:
+                error = response.json().get("error", {})
+                error_message = f"请求异常, 错误码={response.status_code}, 错误类型={error.get('type')}, 错误信息={error.get('message')}"
+                print(f"错误信息：{error_message}")
                 return {
                     "success": False,
-                    "error": "无法获取推荐结果"
+                    "error": error_message
                 }
-            
-        except requests.exceptions.RequestException as e:
+                
+        except Exception as e:
+            error_message = f"服务调用失败: {str(e)}"
+            print(f"异常信息：{error_message}")
             return {
                 "success": False,
-                "error": f"AI服务调用失败: {str(e)}"
-            }
-        except Exception as e:
-            return {
-                "success": False,
-                "error": f"处理失败: {str(e)}"
-            }
-
-    def _format_recommendations(self, raw_response: str) -> Dict[str, Any]:
-        """
-        格式化 AI 返回的推荐结果
-        """
-        try:
-            # 这里可以添加更多的格式化逻辑
-            return {
-                "recommendations": raw_response,
-                "formatted": True
-            }
-        except Exception as e:
-            return {
-                "error": f"格式化失败: {str(e)}",
-                "raw_content": raw_response
+                "error": error_message
             }

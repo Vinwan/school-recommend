@@ -167,43 +167,19 @@
                 const data = await response.json();
                 
                 if (data.success && data.data && data.data.length > 0) {
-                    // 2. 对每个学校获取专业推荐
-                    const schoolsWithMajors = await Promise.all(data.data.map(async school => {
-                        try {
-                            // 调用 Coze API 获取专业推荐
-                            const cozeResponse = await fetch('https://api.coze.cn/v1/chat/completions', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': 'Bearer pat_dfv507axB43FHX3R7Y4hsJHZdPdgfXNJGGx3yPIH9yFwP1FRdZJG3jrkBkkkTBNS'
-                                },
-                                body: JSON.stringify({
-                                    messages: [{
-                                        role: "user",
-                                        content: `请根据以下信息推荐3个适合的专业：
-                                        学校：${school.院校名称}
-                                        高考分数：${score}分
-                                        请只返回专业名称，用逗号分隔。`
-                                    }],
-                                    model: "YOUR_COZE_BOT_ID"
-                                })
-                            });
-                            
-                            const cozeData = await cozeResponse.json();
-                            // 解析 Coze 返回的专业推荐，假设返回格式为：专业1,专业2,专业3
-                            const recommendedMajors = cozeData.choices[0].message.content.split(',').map(m => m.trim());
-                            
-                            return {
-                                ...school,
-                                推荐专业: recommendedMajors
-                            };
-                        } catch (error) {
-                            console.error('获取专业推荐失败:', error);
-                            return {
-                                ...school,
-                                推荐专业: ['暂无专业推荐']
-                            };
-                        }
+                    // 处理专业推荐数据
+                    let majorRecommendations = [];
+                    if (data.major_recommendations && data.major_recommendations.success) {
+                        majorRecommendations = data.major_recommendations.data
+                            .split(/[,，]/)  // 按逗号分割（支持中英文逗号）
+                            .map(major => major.trim())
+                            .filter(major => major); // 过滤空字符串
+                    }
+
+                    // 将专业推荐添加到每个学校
+                    const schoolsWithMajors = data.data.map(school => ({
+                        ...school,
+                        推荐专业: majorRecommendations
                     }));
                     
                     displayResults(schoolsWithMajors);
