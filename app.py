@@ -42,7 +42,11 @@ def recommend_schools():
         score = float(data['score'])
         
         # 添加调试信息
-        print(f"接收到分数: {score}")
+        print(f"当前工作目录: {os.getcwd()}")
+        print(f"CSV文件路径: {csv_path}")
+        print(f"CSV文件是否存在: {os.path.exists(csv_path)}")
+        if os.path.exists(csv_path):
+            print(f"CSV文件大小: {os.path.getsize(csv_path)} bytes")
         print(f"数据框大小: {df.shape}")
         print(f"投档线范围: {df['投档线'].min()} - {df['投档线'].max()}")
         
