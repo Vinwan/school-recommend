@@ -1,8 +1,21 @@
 from flask import Flask, request, jsonify, render_template, make_response
 import pandas as pd
 import os
+import logging
+import sys
+from datetime import datetime
 
 app = Flask(__name__)
+
+# 配置日志输出到控制台
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+logger = logging.getLogger(__name__)
 
 # 移除 AI 服务初始化
 # 检查并创建示例数据
@@ -41,23 +54,23 @@ def recommend_schools():
 
         score = float(data['score'])
         
-        # 添加更详细的调试信息
-        print("="*50)
-        print("请求开始处理")
-        print(f"请求数据: {data}")
-        print(f"当前工作目录: {os.getcwd()}")
-        print(f"CSV文件路径: {csv_path}")
-        print(f"CSV文件是否存在: {os.path.exists(csv_path)}")
+        # 使用logger替换print
+        logger.info("="*50)
+        logger.info("请求开始处理")
+        logger.info(f"请求数据: {data}")
+        logger.info(f"当前工作目录: {os.getcwd()}")
+        logger.info(f"CSV文件路径: {csv_path}")
+        logger.info(f"CSV文件是否存在: {os.path.exists(csv_path)}")
         if os.path.exists(csv_path):
-            print(f"CSV文件大小: {os.path.getsize(csv_path)} bytes")
-            print(f"CSV文件内容预览:")
+            logger.info(f"CSV文件大小: {os.path.getsize(csv_path)} bytes")
+            logger.info("CSV文件内容预览:")
             with open(csv_path, 'r', encoding='utf-8') as f:
-                print(f.read(200))  # 打印前200个字符
-        print(f"数据框大小: {df.shape}")
+                logger.info(f.read(200))  # 打印前200个字符
+        logger.info(f"数据框大小: {df.shape}")
         if not df.empty:
-            print(f"数据框列名: {df.columns.tolist()}")
-            print(f"投档线范围: {df['投档线'].min()} - {df['投档线'].max()}")
-        print("="*50)
+            logger.info(f"数据框列名: {df.columns.tolist()}")
+            logger.info(f"投档线范围: {df['投档线'].min()} - {df['投档线'].max()}")
+        logger.info("="*50)
         
         # 设置分数范围（±5分）
         score_min = score - 5
@@ -69,7 +82,7 @@ def recommend_schools():
             (df['投档线'] <= score_max)
         ]
         
-        print(f"筛选后学校数量: {len(filtered_schools)}")
+        logger.info(f"筛选后学校数量: {len(filtered_schools)}")
         
         # 如果找到的学校少于5所，扩大范围到±10分
         if len(filtered_schools) < 5:
@@ -79,7 +92,7 @@ def recommend_schools():
                 (df['投档线'] >= score_min) & 
                 (df['投档线'] <= score_max)
             ]
-            print(f"扩大范围后学校数量: {len(filtered_schools)}")
+            logger.info(f"扩大范围后学校数量: {len(filtered_schools)}")
         
         # 对于同一院校只保留分数最低的专业组
         filtered_schools = filtered_schools.sort_values('投档线').groupby('院校名称').first().reset_index()
@@ -108,11 +121,11 @@ def recommend_schools():
         })
         
     except Exception as e:
-        print(f"输入分数: {score}")
-        print(f"分数范围: {score_min} - {score_max}")
-        print(f"筛选前学校数量: {len(df)}")
-        print(f"筛选后学校数量: {len(filtered_schools)}")
-        print(f"Error: {str(e)}")
+        logger.error(f"输入分数: {score}")
+        logger.error(f"分数范围: {score_min} - {score_max}")
+        logger.error(f"筛选前学校数量: {len(df)}")
+        logger.error(f"筛选后学校数量: {len(filtered_schools)}")
+        logger.error(f"Error: {str(e)}")
         return jsonify({
             'success': False,
             'error': str(e)
