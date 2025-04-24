@@ -159,8 +159,8 @@
                 // 根据当前环境选择API地址
                 const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
                     ? `http://${window.location.hostname}:8066/api/recommend`
-                    : 'http://106.226.76.221:8066/api/recommend';  // 使用实际的公网IP
-        
+                    : 'http://124.223.109.134:8066/api/recommend';  // 使用正确的公网IP
+                
                 console.log('使用的API地址:', apiUrl); // 添加调试信息
         
                 const response = await fetch(apiUrl, {
