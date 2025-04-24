@@ -70,11 +70,16 @@ def recommend_schools():
         if not df.empty:
             logger.info(f"数据框列名: {df.columns.tolist()}")
             logger.info(f"投档线范围: {df['投档线'].min()} - {df['投档线'].max()}")
+            # 添加数据类型检查
+            logger.info(f"投档线列的数据类型: {df['投档线'].dtype}")
+            logger.info(f"投档线列的前5个值: {df['投档线'].head()}")
         logger.info("="*50)
         
         # 设置分数范围（±5分）
         score_min = score - 5
         score_max = score + 5
+        
+        logger.info(f"初始筛选范围: {score_min} - {score_max}")
         
         # 筛选符合分数范围的学校
         filtered_schools = df[
@@ -88,6 +93,7 @@ def recommend_schools():
         if len(filtered_schools) < 5:
             score_min = score - 10
             score_max = score + 10
+            logger.info(f"扩大筛选范围: {score_min} - {score_max}")
             filtered_schools = df[
                 (df['投档线'] >= score_min) & 
                 (df['投档线'] <= score_max)
