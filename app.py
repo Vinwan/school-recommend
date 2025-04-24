@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, render_template, make_response
+app = Flask(__name__, static_folder='static')
 import pandas as pd
 import os
 import logging
