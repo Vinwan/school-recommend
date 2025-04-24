@@ -52,10 +52,10 @@ def get_schools_by_score(score, range_min=5):
     
     # 查询在分数范围内的学校
     cursor.execute('''
-    SELECT school_name, province, major_group, score_line, lowest_rank
+    SELECT 院校名称, 省份, 专业组名称, 投档线, 最低投档排名
     FROM schools
-    WHERE score_line BETWEEN ? AND ?
-    ORDER BY score_line DESC
+    WHERE 投档线 BETWEEN ? AND ?
+    ORDER BY 投档线 DESC
     LIMIT 5
     ''', (score_min, score_max))
     
