@@ -157,18 +157,24 @@
         
             try {
                 // 根据当前环境选择API地址
-                const apiUrl = window.location.hostname === 'localhost' 
-                    ? 'http://localhost:8066/api/recommend'
+                const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                    ? `http://${window.location.hostname}:8066/api/recommend`
                     : 'http://124.223.109.134:8066/api/recommend';
+        
+                console.log('使用的API地址:', apiUrl); // 添加调试信息
         
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify({ score: parseFloat(score) })
                 });
-
+        
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 const data = await response.json();
                 
                 if (data.success && data.data && data.data.length > 0) {
