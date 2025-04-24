@@ -19,5 +19,5 @@
 
 1. 克隆项目:
 ```bash
-git clone https://github.com/你的用户名/school-recommend.git
+git clone https://github.com/Vinwan/school-recommend.git
 cd school-recommend
