@@ -6,7 +6,7 @@ from services.ai_service import AIRecommendationService
 app = Flask(__name__)
 
 # 初始化AI服务
-# ai_service = AIRecommendationService()
+ai_service = AIRecommendationService()
 
 # 检查并创建示例数据
 if not os.path.exists('schools.csv'):
@@ -62,6 +62,9 @@ def recommend_schools():
                 (df['投档线'] >= score_min) & 
                 (df['投档线'] <= score_max)
             ]
+        
+        # 对于同一院校只保留分数最低的专业组
+        filtered_schools = filtered_schools.sort_values('投档线').groupby('院校名称').first().reset_index()
         
         # 随机选择5所学校
         if len(filtered_schools) > 5:
