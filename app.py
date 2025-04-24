@@ -1,13 +1,10 @@
 from flask import Flask, request, jsonify, render_template, make_response
 import pandas as pd
 import os
-from services.ai_service import AIRecommendationService
 
 app = Flask(__name__)
 
-# 初始化AI服务
-ai_service = AIRecommendationService()
-
+# 移除 AI 服务初始化
 # 检查并创建示例数据
 if not os.path.exists('schools.csv'):
     sample_data = {
@@ -40,9 +37,6 @@ def recommend_schools():
             }), 400
 
         score = float(data['score'])
-        
-        # 获取AI专业推荐
-        major_recommendations = ai_service.get_major_recommendations(score)
         
         # 设置分数范围（±2.5分）
         score_min = score - 2.5
@@ -86,8 +80,7 @@ def recommend_schools():
 
         return jsonify({
             'success': True,
-            'data': result,
-            'major_recommendations': major_recommendations
+            'data': result
         })
         
     except Exception as e:
