@@ -147,17 +147,21 @@
             const scoreInput = document.getElementById('score');
             const score = scoreInput.value;
             const resultsDiv = document.getElementById('results');
-
+        
             if (!score || score < 0 || score > 750) {
                 alert('请输入有效的分数（0-750）');
                 return;
             }
-
+        
             resultsDiv.innerHTML = '<div style="text-align: center; color: #86868b; padding: 20px;">正在查询...</div>';
-
+        
             try {
-                // 1. 首先获取学校推荐
-                const response = await fetch('http://localhost:8066/api/recommend', {
+                // 根据当前环境选择API地址
+                const apiUrl = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:8066/api/recommend'
+                    : 'http://124.223.109.134:8066/api/recommend';
+        
+                const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
