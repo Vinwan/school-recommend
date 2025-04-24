@@ -1,1 +1,1 @@
-ai_service = AIRecommendationService(
+schools

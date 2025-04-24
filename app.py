@@ -6,7 +6,10 @@ app = Flask(__name__)
 
 # 移除 AI 服务初始化
 # 检查并创建示例数据
-if not os.path.exists('schools.csv'):
+current_dir = os.path.dirname(os.path.abspath(__file__))
+csv_path = os.path.join(current_dir, 'schools.csv')
+
+if not os.path.exists(csv_path):
     sample_data = {
         '院校名称': ['示例大学A', '示例大学B', '示例大学C', '示例大学D', '示例大学E'],
         '省份': ['北京', '上海', '广东', '江苏', '浙江'],
@@ -15,9 +18,9 @@ if not os.path.exists('schools.csv'):
         '最低投档排名': [1000, 1200, 1300, 1400, 1500]
     }
     df = pd.DataFrame(sample_data)
-    df.to_csv('schools.csv', index=False, encoding='utf-8')
+    df.to_csv(csv_path, index=False, encoding='utf-8')
 else:
-    df = pd.read_csv('schools.csv', encoding='utf-8')
+    df = pd.read_csv(csv_path, encoding='utf-8')
 
 @app.route('/')
 def index():
@@ -38,9 +41,14 @@ def recommend_schools():
 
         score = float(data['score'])
         
-        # 设置分数范围（±2.5分）
-        score_min = score - 2.5
-        score_max = score + 2.5
+        # 添加调试信息
+        print(f"接收到分数: {score}")
+        print(f"数据框大小: {df.shape}")
+        print(f"投档线范围: {df['投档线'].min()} - {df['投档线'].max()}")
+        
+        # 设置分数范围（±5分）
+        score_min = score - 5
+        score_max = score + 5
         
         # 筛选符合分数范围的学校
         filtered_schools = df[
@@ -48,14 +56,17 @@ def recommend_schools():
             (df['投档线'] <= score_max)
         ]
         
-        # 如果找到的学校少于5所，扩大范围
+        print(f"筛选后学校数量: {len(filtered_schools)}")
+        
+        # 如果找到的学校少于5所，扩大范围到±10分
         if len(filtered_schools) < 5:
-            score_min = score - 5
-            score_max = score + 5
+            score_min = score - 10
+            score_max = score + 10
             filtered_schools = df[
                 (df['投档线'] >= score_min) & 
                 (df['投档线'] <= score_max)
             ]
+            print(f"扩大范围后学校数量: {len(filtered_schools)}")
         
         # 对于同一院校只保留分数最低的专业组
         filtered_schools = filtered_schools.sort_values('投档线').groupby('院校名称').first().reset_index()
@@ -84,6 +95,10 @@ def recommend_schools():
         })
         
     except Exception as e:
+        print(f"输入分数: {score}")
+        print(f"分数范围: {score_min} - {score_max}")
+        print(f"筛选前学校数量: {len(df)}")
+        print(f"筛选后学校数量: {len(filtered_schools)}")
         print(f"Error: {str(e)}")
         return jsonify({
             'success': False,
