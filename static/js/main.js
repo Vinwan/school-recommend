@@ -1,3 +1,11 @@
+// 获取API地址
+function getApiUrl() {
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const localApiUrl = `http://${window.location.hostname}:8066/api/recommend`;
+    const remoteApiUrl = 'http://124.223.109.134:8066/api/recommend';
+    return isLocalhost ? localApiUrl : remoteApiUrl;
+}
+
 // API 调用相关函数
 async function getRecommendations() {
     const scoreInput = document.getElementById('score');
@@ -12,11 +20,7 @@ async function getRecommendations() {
     resultsDiv.innerHTML = '<div style="text-align: center; color: #86868b; padding: 20px;">正在查询...</div>';
 
     try {
-        // 根据当前环境选择API地址
-        const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            ? `http://${window.location.hostname}:8066/api/recommend`
-            : 'http://124.223.109.134:8066/api/recommend';
-        
+        const apiUrl = getApiUrl();
         console.log('使用的API地址:', apiUrl);
 
         const response = await fetch(apiUrl, {
@@ -36,16 +40,14 @@ async function getRecommendations() {
         const data = await response.json();
         
         if (data.success && data.data && data.data.length > 0) {
-            // 处理专业推荐数据
             let majorRecommendations = [];
             if (data.major_recommendations && data.major_recommendations.success) {
                 majorRecommendations = data.major_recommendations.data
-                    .split(/[,，]/)  // 按逗号分割（支持中英文逗号）
+                    .split(/[,，]/)
                     .map(major => major.trim())
-                    .filter(major => major); // 过滤空字符串
+                    .filter(major => major);
             }
 
-            // 将专业推荐添加到每个学校
             const schoolsWithMajors = data.data.map(school => ({
                 ...school,
                 推荐专业: majorRecommendations
@@ -67,13 +69,10 @@ function displayResults(schools) {
     resultsDiv.innerHTML = '';
 
     schools.forEach(school => {
-        // 处理推荐专业数据，确保它是数组
         let majors = [];
         if (typeof school.推荐专业 === 'string') {
-            // 如果是字符串，按逗号分割
             majors = school.推荐专业.split(',').map(m => m.trim());
         } else if (Array.isArray(school.推荐专业)) {
-            // 如果已经是数组，直接使用
             majors = school.推荐专业;
         }
 
