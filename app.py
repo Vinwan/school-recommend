@@ -99,4 +99,4 @@ def after_request(response):
 
 if __name__ == '__main__':
     # 修改host为'0.0.0.0'以允许外部访问
-    app.run(host='0.0.0.0', port=5003)
+    app.run(host='0.0.0.0', port=8066)
