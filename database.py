@@ -50,9 +50,9 @@ def get_schools_by_score(score, range_min=5):
     score_min = score - range_min
     score_max = score + range_min
     
-    # 查询在分数范围内的学校
+    # 查询在分数范围内的学校，添加 DISTINCT 关键字去重
     cursor.execute('''
-    SELECT 院校名称, 省份, 专业组名称, 投档线, 最低投档排名
+    SELECT DISTINCT 院校名称, 省份, 专业组名称, 投档线, 最低投档排名
     FROM schools
     WHERE 投档线 BETWEEN ? AND ?
     ORDER BY 投档线 DESC
@@ -61,28 +61,42 @@ def get_schools_by_score(score, range_min=5):
     
     schools = cursor.fetchall()
     
-    # 如果结果少于5所学校，扩大范围继续查询
-    if len(schools) < 5:
+    # 如果没有找到学校，尝试扩大范围
+    if not schools:
+        # 扩大范围
         score_min = score - (range_min * 2)
         score_max = score + (range_min * 2)
+        
         cursor.execute('''
-        SELECT school_name, province, major_group, score_line, lowest_rank
+        SELECT DISTINCT 院校名称, 省份, 专业组名称, 投档线, 最低投档排名
         FROM schools
-        WHERE score_line BETWEEN ? AND ?
-        ORDER BY score_line DESC
+        WHERE 投档线 BETWEEN ? AND ?
+        ORDER BY 投档线 DESC
         LIMIT 5
         ''', (score_min, score_max))
+        
         schools = cursor.fetchall()
     
-    conn.close()
+    # 将结果转换为字典列表
+    result = []
+    seen_schools = set()  # 用于跟踪已经添加的学校和专业组组合
     
-    return [
-        {
+    for school in schools:
+        school_dict = {
             '院校名称': school[0],
             '省份': school[1],
             '专业组名称': school[2],
-            '投档线': float(school[3]),
-            '最低投档排名': int(school[4])
+            '投档线': school[3],
+            '最低投档排名': school[4]
         }
-        for school in schools
-    ]
+        
+        # 创建唯一标识符，用于检测重复
+        unique_id = f"{school[0]}_{school[2]}"
+        
+        # 只有当这个组合不在已见列表中时才添加
+        if unique_id not in seen_schools:
+            seen_schools.add(unique_id)
+            result.append(school_dict)
+    
+    conn.close()
+    return result

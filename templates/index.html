@@ -7,10 +7,15 @@
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <h1>大学推荐</h1>
-    <div class="input-container">
+    <h1 class="google-colors">
+        <span class="blue">大</span>
+        <span class="red">学</span>
+        <span class="yellow">推</span>
+        <span class="green">荐</span>
+    </h1>
+    <div class="search-container">
         <input type="number" id="score" placeholder="输入分数" min="0" max="750" onkeypress="if(event.key === 'Enter') getRecommendations()">
-        <button onclick="getRecommendations()" class="icon-button">
+        <button onclick="getRecommendations()" class="search-button">
             <img src="/static/images/icon.png" alt="推荐">
         </button>
     </div>
