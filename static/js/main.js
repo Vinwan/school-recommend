@@ -141,11 +141,12 @@ document.querySelectorAll('input[name="group"]').forEach(radio => {
         
         // 清空结果区域
         const resultsDiv = document.getElementById('results');
-        resultsDiv.innerHTML = '';
-        
-        // 如果选择了历史组，显示提示信息
-        if (this.value === 'history') {
-            resultsDiv.innerHTML = '<div style="text-align: center; color: #86868b; padding: 20px;">历史组数据暂未导入，敬请期待！</div>';
-        }
+        resultsDiv.innerHTML = '<div class="welcome-message">请输入想要查询的分数</div>';
     });
+});
+
+// 页面加载时显示欢迎信息
+document.addEventListener('DOMContentLoaded', function() {
+    const resultsDiv = document.getElementById('results');
+    resultsDiv.innerHTML = '<div class="welcome-message">请输入想要查询的分数</div>';
 });
