@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>大学推荐</title>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
@@ -14,7 +14,9 @@
         <span class="green">荐</span>
     </h1>
     <div class="search-container">
-        <input type="number" id="score" placeholder="输入分数" min="0" max="750" onkeypress="if(event.key === 'Enter') getRecommendations()">
+        <input type="number" id="score" placeholder="输入分数" min="0" max="750" 
+               onkeypress="if(event.key === 'Enter') getRecommendations()" 
+               inputmode="numeric" pattern="[0-9]*">
         <button onclick="getRecommendations()" class="search-button">
             <img src="/static/images/icon.png" alt="推荐">
         </button>

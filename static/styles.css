@@ -159,19 +159,38 @@ button:hover {
     color: #1d1d1f;
 }
 
-@media (max-width: 480px) {
-    body {
-        padding: 20px 16px;
-    }
+/* 移动端优化样式 */
+.results-summary {
+    text-align: center;
+    margin-bottom: 15px;
+    color: #4285F4;
+    font-weight: bold;
+}
 
-    input {
-        width: 100%;
-        margin: 0 0 16px 0;
-    }
+.school-info {
+    margin-bottom: 10px;
+}
 
-    button {
-        width: 100%;
-    }
+.major-tags {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 5px;
+}
+
+.no-majors {
+    color: #999;
+    font-style: italic;
+}
+
+/* 触摸优化 */
+button, .major-tag {
+    min-height: 44px; /* 确保触摸目标足够大 */
+}
+
+/* 防止溢出 */
+.school-card {
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .search-container {

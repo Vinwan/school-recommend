@@ -67,6 +67,11 @@ async function getRecommendations() {
 function displayResults(schools) {
     const resultsDiv = document.getElementById('results');
     resultsDiv.innerHTML = '';
+    
+    // 添加结果数量提示
+    if (schools.length > 0) {
+        resultsDiv.innerHTML = `<div class="results-summary">找到 ${schools.length} 所符合条件的大学</div>`;
+    }
 
     schools.forEach(school => {
         let majors = [];
@@ -76,20 +81,22 @@ function displayResults(schools) {
             majors = school.推荐专业;
         }
 
-        const majorsHtml = majors.map(major => 
-            `<span class="major-tag">${major}</span>`
-        ).join('');
+        const majorsHtml = majors.length > 0 ? 
+            majors.map(major => `<span class="major-tag">${major}</span>`).join('') :
+            '<span class="no-majors">暂无推荐专业</span>';
 
         resultsDiv.innerHTML += `
             <div class="school-card">
                 <h3>${school.院校名称}</h3>
-                <p>省份：${school.省份}</p>
-                <p>专业组：${school.专业组名称}</p>
-                <p>投档线：${school.投档线}</p>
-                <p>最低投档排名：${school.最低投档排名}</p>
+                <div class="school-info">
+                    <p><strong>省份：</strong>${school.省份}</p>
+                    <p><strong>专业组：</strong>${school.专业组名称}</p>
+                    <p><strong>投档线：</strong>${school.投档线}</p>
+                    <p><strong>最低投档排名：</strong>${school.最低投档排名}</p>
+                </div>
                 <div class="majors">
-                    <p>推荐专业：</p>
-                    ${majorsHtml}
+                    <p><strong>推荐专业：</strong></p>
+                    <div class="major-tags">${majorsHtml}</div>
                 </div>
             </div>
         `;
