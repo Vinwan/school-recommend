@@ -31,6 +31,17 @@ def init_db():
     )
     ''')
     
+    # 创建学校信息表
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS school_info (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        院校名称 TEXT NOT NULL,
+        性质 TEXT,
+        考研 TEXT,
+        行业隶属 TEXT
+    )
+    ''')
+    
     conn.commit()
     conn.close()
 
@@ -67,6 +78,44 @@ def import_csv_to_db(csv_path, table_name='schools'):
         print(f"导入数据失败: {str(e)}")
         return False
 
+def import_school_info(csv_path):
+    """导入学校信息数据"""
+    try:
+        conn = sqlite3.connect('schools.db')
+        cursor = conn.cursor()
+        
+        # 清空表
+        cursor.execute("DELETE FROM school_info")
+        conn.commit()
+        
+        # 读取CSV文件
+        df = pd.read_csv(csv_path, encoding='utf-8')
+        
+        # 导入数据，处理985/211标签
+        for _, row in df.iterrows():
+            性质 = row['性质']
+            if 性质 == '985/211':
+                性质 = '985,211'
+            elif 性质 != '211':
+                性质 = None
+                
+            cursor.execute('''
+                INSERT INTO school_info (院校名称, 性质, 考研, 行业隶属)
+                VALUES (?, ?, ?, ?)
+            ''', (
+                row['院校名称'],
+                性质,
+                row['考研'],
+                row['行业隶属']
+            ))
+        
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"导入学校信息失败: {str(e)}")
+        return False
+
 def get_schools_by_score(score, group_type='physics'):
     """根据分数和组别获取推荐学校"""
     conn = sqlite3.connect('schools.db')
@@ -83,10 +132,12 @@ def get_schools_by_score(score, group_type='physics'):
     
     # 查询"冲"的院校
     cursor.execute(f'''
-    SELECT DISTINCT 院校名称, 省份, 专业组名称, 投档线, 最低投档排名
-    FROM {table_name}
-    WHERE 投档线 >= ?
-    ORDER BY 投档线 ASC
+    SELECT DISTINCT s.院校名称, s.省份, s.专业组名称, s.投档线, s.最低投档排名,
+           i.性质, i.考研, i.行业隶属
+    FROM {table_name} s
+    LEFT JOIN school_info i ON s.院校名称 = i.院校名称
+    WHERE s.投档线 >= ?
+    ORDER BY s.投档线 ASC
     LIMIT 3
     ''', (chong_min,))
     
@@ -94,10 +145,12 @@ def get_schools_by_score(score, group_type='physics'):
     
     # 查询"稳"的院校
     cursor.execute(f'''
-    SELECT DISTINCT 院校名称, 省份, 专业组名称, 投档线, 最低投档排名
-    FROM {table_name}
-    WHERE 投档线 BETWEEN ? AND ?
-    ORDER BY 投档线 DESC
+    SELECT DISTINCT s.院校名称, s.省份, s.专业组名称, s.投档线, s.最低投档排名,
+           i.性质, i.考研, i.行业隶属
+    FROM {table_name} s
+    LEFT JOIN school_info i ON s.院校名称 = i.院校名称
+    WHERE s.投档线 BETWEEN ? AND ?
+    ORDER BY s.投档线 DESC
     LIMIT 3
     ''', (wen_min, wen_max))
     
@@ -105,16 +158,18 @@ def get_schools_by_score(score, group_type='physics'):
     
     # 查询"保"的院校
     cursor.execute(f'''
-    SELECT DISTINCT 院校名称, 省份, 专业组名称, 投档线, 最低投档排名
-    FROM {table_name}
-    WHERE 投档线 <= ? AND 投档线 >= ?
-    ORDER BY 投档线 DESC
+    SELECT DISTINCT s.院校名称, s.省份, s.专业组名称, s.投档线, s.最低投档排名,
+           i.性质, i.考研, i.行业隶属
+    FROM {table_name} s
+    LEFT JOIN school_info i ON s.院校名称 = i.院校名称
+    WHERE s.投档线 <= ? AND s.投档线 >= ?
+    ORDER BY s.投档线 DESC
     LIMIT 3
     ''', (bao_min, bao_min - 5))
     
     bao_schools = cursor.fetchall()
     
-    # 将结果转换为字典列表
+    # 将结果转换为字典
     result = {
         'chong': [],
         'wen': [],
@@ -123,36 +178,63 @@ def get_schools_by_score(score, group_type='physics'):
     
     # 处理"冲"的院校
     for school in chong_schools:
+        tags = []
+        if school[5]:  # 性质
+            tags.extend(school[5].split(','))
+        if school[6]:  # 考研
+            tags.append(school[6])
+        if school[7]:  # 行业隶属
+            tags.append(school[7])
+            
         school_dict = {
             '院校名称': school[0],
             '省份': school[1],
             '专业组名称': school[2],
             '投档线': school[3],
             '最低投档排名': school[4],
+            '标签': tags,
             '类别': '冲'
         }
         result['chong'].append(school_dict)
     
     # 处理"稳"的院校
     for school in wen_schools:
+        tags = []
+        if school[5]:  # 性质
+            tags.extend(school[5].split(','))
+        if school[6]:  # 考研
+            tags.append(school[6])
+        if school[7]:  # 行业隶属
+            tags.append(school[7])
+            
         school_dict = {
             '院校名称': school[0],
             '省份': school[1],
             '专业组名称': school[2],
             '投档线': school[3],
             '最低投档排名': school[4],
+            '标签': tags,
             '类别': '稳'
         }
         result['wen'].append(school_dict)
     
     # 处理"保"的院校
     for school in bao_schools:
+        tags = []
+        if school[5]:  # 性质
+            tags.extend(school[5].split(','))
+        if school[6]:  # 考研
+            tags.append(school[6])
+        if school[7]:  # 行业隶属
+            tags.append(school[7])
+            
         school_dict = {
             '院校名称': school[0],
             '省份': school[1],
             '专业组名称': school[2],
             '投档线': school[3],
             '最低投档排名': school[4],
+            '标签': tags,
             '类别': '保'
         }
         result['bao'].append(school_dict)

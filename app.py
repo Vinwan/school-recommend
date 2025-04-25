@@ -4,7 +4,7 @@ import os
 import logging
 import sys
 from datetime import datetime
-from database import init_db, import_csv_to_db, get_schools_by_score
+from database import init_db, import_csv_to_db, get_schools_by_score, import_school_info  # Added import_school_info
 
 app = Flask(__name__, static_folder='static')
 
@@ -25,6 +25,7 @@ init_db()
 current_dir = os.path.dirname(os.path.abspath(__file__))
 physics_csv_path = os.path.join(current_dir, 'schools.csv')
 history_csv_path = os.path.join(current_dir, 'school-history.csv')
+school_info_path = os.path.join(current_dir, 'school-info.csv')
 
 if not os.path.exists(physics_csv_path):
     sample_data = {
@@ -47,6 +48,13 @@ if os.path.exists(history_csv_path):
     logger.info("历史组数据导入完成")
 else:
     logger.warning("历史组数据文件不存在")
+
+# 导入学校信息数据
+if os.path.exists(school_info_path):
+    import_school_info(school_info_path)
+    logger.info("学校信息数据导入完成")
+else:
+    logger.warning("学校信息数据文件不存在")
 
 @app.route('/')
 def index():
