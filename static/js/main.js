@@ -39,21 +39,8 @@ async function getRecommendations() {
         }
         const data = await response.json();
         
-        if (data.success && data.data && data.data.length > 0) {
-            let majorRecommendations = [];
-            if (data.major_recommendations && data.major_recommendations.success) {
-                majorRecommendations = data.major_recommendations.data
-                    .split(/[,，]/)
-                    .map(major => major.trim())
-                    .filter(major => major);
-            }
-
-            const schoolsWithMajors = data.data.map(school => ({
-                ...school,
-                推荐专业: majorRecommendations
-            }));
-            
-            displayResults(schoolsWithMajors);
+        if (data.success && data.data) {
+            displayResults(data.data, score);
         } else {
             resultsDiv.innerHTML = '<div style="text-align: center; color: #86868b; padding: 20px;">未找到符合条件的院校</div>';
         }
@@ -64,41 +51,80 @@ async function getRecommendations() {
 }
 
 // 展示结果相关函数
-function displayResults(schools) {
+function displayResults(schools, score) {
     const resultsDiv = document.getElementById('results');
     resultsDiv.innerHTML = '';
     
-    // 添加结果数量提示
-    if (schools.length > 0) {
-        resultsDiv.innerHTML = `<div class="results-summary">找到 ${schools.length} 所符合条件的大学</div>`;
+    // 添加分数说明
+    resultsDiv.innerHTML += `
+        <div class="score-explanation">
+            <p>您的分数：<strong>${score}</strong></p>
+            <p class="category-explanation">
+                <span class="category-tag chong">冲</span>：分数线在 ${Number(score) + 5} 分以上的学校
+                <span class="category-tag wen">稳</span>：分数线在 ${Number(score) - 3} 至 ${score} 分之间的学校
+                <span class="category-tag bao">保</span>：分数线在 ${Number(score) - 10} 分左右的学校
+            </p>
+        </div>
+    `;
+
+    // 显示"冲"的院校
+    if (schools.chong && schools.chong.length > 0) {
+        resultsDiv.innerHTML += `<h2 class="category-title chong-title">冲刺院校</h2>`;
+        schools.chong.forEach(school => {
+            displaySchoolCard(school, resultsDiv);
+        });
     }
 
-    schools.forEach(school => {
-        let majors = [];
-        if (typeof school.推荐专业 === 'string') {
-            majors = school.推荐专业.split(',').map(m => m.trim());
-        } else if (Array.isArray(school.推荐专业)) {
-            majors = school.推荐专业;
-        }
+    // 显示"稳"的院校
+    if (schools.wen && schools.wen.length > 0) {
+        resultsDiv.innerHTML += `<h2 class="category-title wen-title">稳妥院校</h2>`;
+        schools.wen.forEach(school => {
+            displaySchoolCard(school, resultsDiv);
+        });
+    }
 
-        const majorsHtml = majors.length > 0 ? 
-            majors.map(major => `<span class="major-tag">${major}</span>`).join('') :
-            '<span class="no-majors">暂无推荐专业</span>';
+    // 显示"保"的院校
+    if (schools.bao && schools.bao.length > 0) {
+        resultsDiv.innerHTML += `<h2 class="category-title bao-title">保底院校</h2>`;
+        schools.bao.forEach(school => {
+            displaySchoolCard(school, resultsDiv);
+        });
+    }
+    
+    // 如果所有类别都没有学校
+    if ((!schools.chong || schools.chong.length === 0) && 
+        (!schools.wen || schools.wen.length === 0) && 
+        (!schools.bao || schools.bao.length === 0)) {
+        resultsDiv.innerHTML += '<div style="text-align: center; color: #86868b; padding: 20px;">未找到符合条件的院校</div>';
+    }
+}
 
-        resultsDiv.innerHTML += `
-            <div class="school-card">
-                <h3>${school.院校名称}</h3>
-                <div class="school-info">
-                    <p><strong>省份：</strong>${school.省份}</p>
-                    <p><strong>专业组：</strong>${school.专业组名称}</p>
-                    <p><strong>投档线：</strong>${school.投档线}</p>
-                    <p><strong>最低投档排名：</strong>${school.最低投档排名}</p>
-                </div>
-                <div class="majors">
-                    <p><strong>推荐专业：</strong></p>
-                    <div class="major-tags">${majorsHtml}</div>
-                </div>
+// 显示单个学校卡片
+function displaySchoolCard(school, container) {
+    let majors = [];
+    if (typeof school.推荐专业 === 'string') {
+        majors = school.推荐专业.split(',').map(m => m.trim());
+    } else if (Array.isArray(school.推荐专业)) {
+        majors = school.推荐专业;
+    }
+
+    const majorsHtml = majors.length > 0 ? 
+        majors.map(major => `<span class="major-tag">${major}</span>`).join('') :
+        '<span class="no-majors">暂无推荐专业</span>';
+
+    container.innerHTML += `
+        <div class="school-card ${school.类别}-card">
+            <h3>${school.院校名称}</h3>
+            <div class="school-info">
+                <p><strong>省份：</strong>${school.省份}</p>
+                <p><strong>专业组：</strong>${school.专业组名称}</p>
+                <p><strong>投档线：</strong>${school.投档线}</p>
+                <p><strong>最低投档排名：</strong>${school.最低投档排名}</p>
             </div>
-        `;
-    });
+            <div class="majors">
+                <p><strong>推荐专业：</strong></p>
+                <div class="major-tags">${majorsHtml}</div>
+            </div>
+        </div>
+    `;
 }
