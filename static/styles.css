@@ -139,12 +139,61 @@ button:hover {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+/* 统一宽度变量 */
+:root {
+    --content-width: 800px;
+}
+
+/* 搜索容器样式 */
+.search-container {
+    display: flex;
+    justify-content: space-between;
+    width: var(--content-width);
+    margin: 0 auto;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+/* 搜索输入框样式 */
+.search-container input {
+    flex: 1;
+    margin-right: 10px;
+    padding: 12px 16px;
+    font-size: 17px;
+    border: 1px solid #d2d2d7;
+    border-radius: 12px;
+    margin-right: 10px;
+    outline: none;
+    transition: all 0.3s;
+}
+
+input:focus {
+    border-color: #0071e3;
+    box-shadow: 0 0 0 4px rgba(0,113,227,0.15);
+}
+
+button {
+    padding: 12px 24px;
+    font-size: 17px;
+    background: linear-gradient(135deg, #ECB2F4 0%, #6217D5 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+button:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
 /* 欢迎容器样式 */
 .welcome-container {
-    text-align: center;
-    padding: 20px;
+    width: var(--content-width);
     margin: 20px auto;
-    max-width: 800px;
+    padding: 20px;
+    box-sizing: border-box;
     background-color: white;
     border-radius: 12px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -152,12 +201,11 @@ button:hover {
 
 /* 欢迎图片样式 */
 .welcome-image {
-    max-width: 100%;
+    width: 100%;
     height: auto;
-    margin-bottom: 20px;
 }
 
-/* 欢迎文字样式 */
+/* 移除欢迎文字样式，因为不再需要 */
 .welcome-text {
     font-size: 24px;
     color: #1a73e8;
