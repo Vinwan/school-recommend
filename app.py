@@ -18,11 +18,15 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Initialize database first
+init_db()
+
 # 检查并创建示例数据
 current_dir = os.path.dirname(os.path.abspath(__file__))
-csv_path = os.path.join(current_dir, 'schools.csv')
+physics_csv_path = os.path.join(current_dir, 'schools.csv')
+history_csv_path = os.path.join(current_dir, 'school-history.csv')
 
-if not os.path.exists(csv_path):
+if not os.path.exists(physics_csv_path):
     sample_data = {
         '院校名称': ['示例大学A', '示例大学B', '示例大学C', '示例大学D', '示例大学E'],
         '省份': ['北京', '上海', '广东', '江苏', '浙江'],
@@ -31,10 +35,18 @@ if not os.path.exists(csv_path):
         '最低投档排名': [1000, 1200, 1300, 1400, 1500]
     }
     df = pd.DataFrame(sample_data)
-    df.to_csv(csv_path, index=False, encoding='utf-8')
+    df.to_csv(physics_csv_path, index=False, encoding='utf-8')
 
-# 初始化数据库并导入数据
-import_csv_to_db(csv_path)
+# Import physics data
+import_csv_to_db(physics_csv_path, 'schools')
+logger.info("物理组数据导入完成")
+
+# Import history data if exists
+if os.path.exists(history_csv_path):
+    import_csv_to_db(history_csv_path, 'schools_history')
+    logger.info("历史组数据导入完成")
+else:
+    logger.warning("历史组数据文件不存在")
 
 @app.route('/')
 def index():
@@ -54,6 +66,7 @@ def recommend_schools():
             }), 400
 
         score = float(data['score'])
+        group_type = data.get('group', 'physics')  # 默认为物理组
         
         # 记录请求信息
         logger.info("="*50)
@@ -61,7 +74,7 @@ def recommend_schools():
         logger.info(f"请求数据: {data}")
         
         # 从数据库获取推荐学校
-        result = get_schools_by_score(score)
+        result = get_schools_by_score(score, group_type)
         
         return jsonify({
             'success': True,

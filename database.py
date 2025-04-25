@@ -3,48 +3,77 @@ import pandas as pd
 from pathlib import Path
 
 def init_db():
-    # 创建数据库连接
+    """初始化数据库"""
     conn = sqlite3.connect('schools.db')
     cursor = conn.cursor()
     
-    # 创建学校表
+    # 创建物理组学校表
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS schools (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        school_name TEXT NOT NULL,
-        province TEXT NOT NULL,
-        major_group TEXT NOT NULL,
-        score_line FLOAT NOT NULL,
-        lowest_rank INTEGER NOT NULL
+        院校名称 TEXT NOT NULL,
+        省份 TEXT NOT NULL,
+        专业组名称 TEXT NOT NULL,
+        投档线 REAL NOT NULL,
+        最低投档排名 INTEGER NOT NULL
+    )
+    ''')
+    
+    # 创建历史组学校表
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS schools_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        院校名称 TEXT NOT NULL,
+        省份 TEXT NOT NULL,
+        专业组名称 TEXT NOT NULL,
+        投档线 REAL NOT NULL,
+        最低投档排名 INTEGER NOT NULL
     )
     ''')
     
     conn.commit()
-    return conn
-
-def import_csv_to_db(csv_path):
-    # 读取CSV文件
-    df = pd.read_csv(csv_path, encoding='utf-8')
-    
-    # 创建数据库连接
-    conn = init_db()
-    
-    # 将DataFrame数据导入到数据库
-    df.to_sql('schools', conn, if_exists='replace', index=False, 
-              dtype={
-                  '院校名称': 'TEXT',
-                  '省份': 'TEXT',
-                  '专业组名称': 'TEXT',
-                  '投档线': 'FLOAT',
-                  '最低投档排名': 'INTEGER'
-              })
-    
-    conn.commit()
     conn.close()
 
-def get_schools_by_score(score, range_min=10):
+def import_csv_to_db(csv_path, table_name='schools'):
+    """导入CSV数据到指定表"""
+    try:
+        conn = sqlite3.connect('schools.db')
+        cursor = conn.cursor()
+        
+        # 清空表
+        cursor.execute(f"DELETE FROM {table_name}")
+        conn.commit()
+        
+        # 读取CSV文件
+        df = pd.read_csv(csv_path, encoding='utf-8')
+        
+        # 导入数据
+        for _, row in df.iterrows():
+            cursor.execute(f'''
+                INSERT INTO {table_name} (院校名称, 省份, 专业组名称, 投档线, 最低投档排名)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (
+                row['院校名称'],
+                row['省份'],
+                row['专业组名称'],
+                row['投档线'],
+                row['最低投档排名']
+            ))
+        
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"导入数据失败: {str(e)}")
+        return False
+
+def get_schools_by_score(score, group_type='physics'):
+    """根据分数和组别获取推荐学校"""
     conn = sqlite3.connect('schools.db')
     cursor = conn.cursor()
+    
+    # 根据组别选择表
+    table_name = 'schools' if group_type == 'physics' else 'schools_history'
     
     # 定义三个类别的分数范围
     chong_min = score + 5  # "冲"的院校
@@ -53,9 +82,9 @@ def get_schools_by_score(score, range_min=10):
     bao_min = score - 10   # "保"的院校
     
     # 查询"冲"的院校
-    cursor.execute('''
+    cursor.execute(f'''
     SELECT DISTINCT 院校名称, 省份, 专业组名称, 投档线, 最低投档排名
-    FROM schools
+    FROM {table_name}
     WHERE 投档线 >= ?
     ORDER BY 投档线 ASC
     LIMIT 3
@@ -64,9 +93,9 @@ def get_schools_by_score(score, range_min=10):
     chong_schools = cursor.fetchall()
     
     # 查询"稳"的院校
-    cursor.execute('''
+    cursor.execute(f'''
     SELECT DISTINCT 院校名称, 省份, 专业组名称, 投档线, 最低投档排名
-    FROM schools
+    FROM {table_name}
     WHERE 投档线 BETWEEN ? AND ?
     ORDER BY 投档线 DESC
     LIMIT 3
@@ -75,9 +104,9 @@ def get_schools_by_score(score, range_min=10):
     wen_schools = cursor.fetchall()
     
     # 查询"保"的院校
-    cursor.execute('''
+    cursor.execute(f'''
     SELECT DISTINCT 院校名称, 省份, 专业组名称, 投档线, 最低投档排名
-    FROM schools
+    FROM {table_name}
     WHERE 投档线 <= ? AND 投档线 >= ?
     ORDER BY 投档线 DESC
     LIMIT 3

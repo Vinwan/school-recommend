@@ -16,10 +16,6 @@ async function getRecommendations() {
         return;
     }
 
-    if (selectedGroup === 'history') {
-        alert('历史组数据暂未导入，敬请期待！');
-        return;
-    }
     const resultsDiv = document.getElementById('results');
 
     resultsDiv.innerHTML = '<div style="text-align: center; color: #86868b; padding: 20px;">正在查询...</div>';
@@ -36,7 +32,10 @@ async function getRecommendations() {
                 'Origin': window.location.origin
             },
             credentials: 'omit',
-            body: JSON.stringify({ score: parseFloat(score) })
+            body: JSON.stringify({ 
+                score: parseFloat(score),
+                group: selectedGroup  // 添加组别参数
+            })
         });
 
         if (!response.ok) {
