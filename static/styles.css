@@ -139,6 +139,31 @@ button:hover {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+/* 欢迎容器样式 */
+.welcome-container {
+    text-align: center;
+    padding: 20px;
+    margin: 20px auto;
+    max-width: 800px;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* 欢迎图片样式 */
+.welcome-image {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 20px;
+}
+
+/* 欢迎文字样式 */
+.welcome-text {
+    font-size: 24px;
+    color: #1a73e8;
+    font-weight: 500;
+}
+
 /* 调整结果区域样式 */
 .results {
     padding: 20px;

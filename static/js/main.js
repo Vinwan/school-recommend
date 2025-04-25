@@ -139,14 +139,24 @@ document.querySelectorAll('input[name="group"]').forEach(radio => {
         // 清空输入框
         document.getElementById('score').value = '';
         
-        // 清空结果区域
+        // 清空结果区域并显示欢迎信息
         const resultsDiv = document.getElementById('results');
-        resultsDiv.innerHTML = '<div class="welcome-message">请输入想要查询的分数</div>';
+        resultsDiv.innerHTML = `
+            <div class="welcome-container">
+                <img src="/static/images/background.svg" alt="欢迎" class="welcome-image">
+                <div class="welcome-text">请输入想要查询的分数</div>
+            </div>
+        `;
     });
 });
 
 // 页面加载时显示欢迎信息
 document.addEventListener('DOMContentLoaded', function() {
     const resultsDiv = document.getElementById('results');
-    resultsDiv.innerHTML = '<div class="welcome-message">请输入想要查询的分数</div>';
+    resultsDiv.innerHTML = `
+        <div class="welcome-container">
+            <img src="/static/images/background.svg" alt="欢迎" class="welcome-image">
+            <div class="welcome-text">请输入想要查询的分数</div>
+        </div>
+    `;
 });
