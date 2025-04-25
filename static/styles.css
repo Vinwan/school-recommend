@@ -142,6 +142,7 @@ button:hover {
 /* 统一宽度变量 */
 :root {
     --content-width: 800px;
+    --mobile-padding: 20px;
 }
 
 /* 搜索容器样式 */
@@ -152,6 +153,96 @@ button:hover {
     margin: 0 auto;
     padding: 0 20px;
     box-sizing: border-box;
+}
+
+/* 欢迎容器样式 */
+.welcome-container {
+    width: var(--content-width);
+    margin: 20px auto;
+    padding: 20px;
+    box-sizing: border-box;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 820px) {
+    :root {
+        --content-width: 100%;
+    }
+    
+    .search-container {
+        padding: 0 var(--mobile-padding);
+    }
+    
+    .welcome-container {
+        margin: 10px auto;
+        padding: 10px;
+    }
+    
+    /* 调整标题大小 */
+    .google-colors {
+        font-size: 24px;
+        margin: 15px 0;
+    }
+    
+    /* 调整组别选择器样式 */
+    .group-selector {
+        padding: 0 var(--mobile-padding);
+    }
+    
+    .radio-label {
+        padding: 6px 12px;
+    }
+    
+    /* 调整搜索框和按钮大小 */
+    .search-container input {
+        height: 40px;
+        font-size: 16px;
+    }
+    
+    .search-button {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .search-button img {
+        width: 20px;
+        height: 20px;
+    }
+    
+    /* 调整结果区域样式 */
+    .results {
+        padding: 10px var(--mobile-padding);
+    }
+    
+    /* 调整表格样式 */
+    .results table {
+        font-size: 14px;
+    }
+    
+    .results td, .results th {
+        padding: 8px;
+    }
+}
+
+/* 小屏幕手机适配 */
+@media screen and (max-width: 480px) {
+    .radio-label {
+        padding: 4px 8px;
+        font-size: 14px;
+    }
+    
+    .search-container input {
+        height: 36px;
+        font-size: 14px;
+    }
+    
+    .search-button {
+        width: 36px;
+        height: 36px;
+    }
 }
 
 /* 搜索输入框样式 */
