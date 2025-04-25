@@ -8,14 +8,19 @@ function getApiUrl() {
 
 // API 调用相关函数
 async function getRecommendations() {
-    const scoreInput = document.getElementById('score');
-    const score = scoreInput.value;
-    const resultsDiv = document.getElementById('results');
-
+    const score = document.getElementById('score').value;
+    const selectedGroup = document.querySelector('input[name="group"]:checked').value;
+    
     if (!score || score < 0 || score > 750) {
         alert('请输入有效的分数（0-750）');
         return;
     }
+
+    if (selectedGroup === 'history') {
+        alert('历史组数据暂未导入，敬请期待！');
+        return;
+    }
+    const resultsDiv = document.getElementById('results');
 
     resultsDiv.innerHTML = '<div style="text-align: center; color: #86868b; padding: 20px;">正在查询...</div>';
 
@@ -128,3 +133,20 @@ function displaySchoolCard(school, container) {
         </div>
     `;
 }
+
+// 添加组别切换事件监听
+document.querySelectorAll('input[name="group"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        // 清空输入框
+        document.getElementById('score').value = '';
+        
+        // 清空结果区域
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = '';
+        
+        // 如果选择了历史组，显示提示信息
+        if (this.value === 'history') {
+            resultsDiv.innerHTML = '<div style="text-align: center; color: #86868b; padding: 20px;">历史组数据暂未导入，敬请期待！</div>';
+        }
+    });
+});

@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>大学推荐</title>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
@@ -13,10 +13,20 @@
         <span class="yellow">推</span>
         <span class="green">荐</span>
     </h1>
+    
+    <div class="group-selector">
+        <label class="radio-label">
+            <input type="radio" name="group" value="physics" checked>
+            <span class="radio-text">物理组</span>
+        </label>
+        <label class="radio-label">
+            <input type="radio" name="group" value="history">
+            <span class="radio-text">历史组</span>
+        </label>
+    </div>
+
     <div class="search-container">
-        <input type="number" id="score" placeholder="输入分数" min="0" max="750" 
-               onkeypress="if(event.key === 'Enter') getRecommendations()" 
-               inputmode="numeric" pattern="[0-9]*">
+        <input type="number" id="score" placeholder="输入分数" min="0" max="750" onkeypress="if(event.key === 'Enter') getRecommendations()">
         <button onclick="getRecommendations()" class="search-button">
             <img src="/static/images/icon.png" alt="推荐">
         </button>
