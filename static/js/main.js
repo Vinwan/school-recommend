@@ -123,13 +123,13 @@ function displaySchoolCard(school, container) {
         majors = school.推荐专业;
     }
 
-    const majorsHtml = majors.length > 0 ? 
-        majors.map(major => `<span class="major-tag">${major}</span>`).join('') :
-        '<span class="no-majors">暂无推荐专业</span>';
-
-    // 处理标签，特别是保研率
+    // 处理标签，优先显示985标签
     const tags = school.标签 || [];
     const tagsHtml = tags.map(tag => {
+        // 如果学校有985标签，就不显示211标签
+        if (tags.includes('985') && tag === '211') {
+            return '';
+        }
         if (tag === '985') return '<span class="tag tag-985">985</span>';
         if (tag === '211') return '<span class="tag tag-211">211</span>';
         // 处理保研率标签
@@ -137,7 +137,17 @@ function displaySchoolCard(school, container) {
             return `<span class="tag tag-postgraduate">保研率${tag}%</span>`;
         }
         return `<span class="tag">${tag}</span>`;
-    }).join('');
+    }).filter(tag => tag !== '').join('');
+
+    // 只有当有推荐专业时才显示专业部分
+    const majorsSection = majors.length > 0 ? `
+        <div class="majors">
+            <p><strong>推荐专业：</strong></p>
+            <div class="major-tags">
+                ${majors.map(major => `<span class="major-tag">${major}</span>`).join('')}
+            </div>
+        </div>
+    ` : '';
 
     container.innerHTML += `
         <div class="school-card ${school.类别}-card">
@@ -149,10 +159,7 @@ function displaySchoolCard(school, container) {
                 <p><strong>投档线：</strong>${school.投档线}</p>
                 <p><strong>最低投档排名：</strong>${school.最低投档排名}</p>
             </div>
-            <div class="majors">
-                <p><strong>推荐专业：</strong></p>
-                <div class="major-tags">${majorsHtml}</div>
-            </div>
+            ${majorsSection}
         </div>
     `;
 }
