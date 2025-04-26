@@ -17,7 +17,6 @@ async function getRecommendations() {
     }
 
     const resultsDiv = document.getElementById('results');
-
     resultsDiv.innerHTML = '<div style="text-align: center; color: #86868b; padding: 20px;">正在查询...</div>';
 
     try {
@@ -34,7 +33,7 @@ async function getRecommendations() {
             credentials: 'omit',
             body: JSON.stringify({ 
                 score: parseFloat(score),
-                group: selectedGroup  // 添加组别参数
+                group: selectedGroup
             })
         });
 
@@ -44,7 +43,19 @@ async function getRecommendations() {
         const data = await response.json();
         
         if (data.success && data.data) {
-            displayResults(data.data, score);
+            // 判断分数是否大于等于680
+            if (parseFloat(score) >= 680) {
+                // 只显示四所顶尖高校
+                const topSchools = ['清华大学', '北京大学', '上海交通大学', '复旦大学'];
+                const filteredData = {
+                    chong: data.data.chong ? data.data.chong.filter(school => topSchools.includes(school.院校名称)) : [],
+                    wen: data.data.wen ? data.data.wen.filter(school => topSchools.includes(school.院校名称)) : [],
+                    bao: data.data.bao ? data.data.bao.filter(school => topSchools.includes(school.院校名称)) : []
+                };
+                displayResults(filteredData, score);
+            } else {
+                displayResults(data.data, score);
+            }
         } else {
             resultsDiv.innerHTML = '<div style="text-align: center; color: #86868b; padding: 20px;">未找到符合条件的院校</div>';
         }
