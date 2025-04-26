@@ -358,10 +358,45 @@ button:hover {
     margin-bottom: 10px;
 }
 
+/* 专业标签样式 */
 .major-tags {
     display: flex;
     flex-wrap: wrap;
-    margin-top: 5px;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.major-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    background-color: #f0f7ff;
+    color: #1a73e8;
+    border-radius: 16px;
+    font-size: 13px;
+    line-height: 1.4;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(26, 115, 232, 0.1);
+}
+
+.major-tag:hover {
+    background-color: #e8f1ff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(26, 115, 232, 0.1);
+}
+
+.no-majors {
+    color: #999;
+    font-style: italic;
+    padding: 8px 0;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 820px) {
+    .major-tag {
+        font-size: 12px;
+        padding: 4px 10px;
+    }
 }
 
 .no-majors {
