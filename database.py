@@ -31,14 +31,16 @@ def init_db():
     )
     ''')
     
-    # 创建学校信息表
+    # 创建学校信息表，添加顶尖专业和特色专业字段
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS school_info (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         院校名称 TEXT NOT NULL,
         性质 TEXT,
         考研 TEXT,
-        行业隶属 TEXT
+        行业隶属 TEXT,
+        顶尖专业 TEXT,
+        特色专业 TEXT
     )
     ''')
     
@@ -100,13 +102,15 @@ def import_school_info(csv_path):
                 性质 = None
                 
             cursor.execute('''
-                INSERT INTO school_info (院校名称, 性质, 考研, 行业隶属)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO school_info (院校名称, 性质, 考研, 行业隶属, 顶尖专业, 特色专业)
+                VALUES (?, ?, ?, ?, ?, ?)
             ''', (
                 row['院校名称'],
                 性质,
                 row['考研'],
-                row['行业隶属']
+                row['行业隶属'],
+                row['顶尖专业'] if '顶尖专业' in row else None,
+                row['特色专业'] if '特色专业' in row else None
             ))
         
         conn.commit()
@@ -133,7 +137,7 @@ def get_schools_by_score(score, group_type='physics'):
     # 查询"冲"的院校
     cursor.execute(f'''
     SELECT DISTINCT s.院校名称, s.省份, s.专业组名称, s.投档线, s.最低投档排名,
-           i.性质, i.考研, i.行业隶属
+           i.性质, i.考研, i.行业隶属, i.顶尖专业, i.特色专业
     FROM {table_name} s
     LEFT JOIN school_info i ON s.院校名称 = i.院校名称
     WHERE s.投档线 >= ?
@@ -146,7 +150,7 @@ def get_schools_by_score(score, group_type='physics'):
     # 查询"稳"的院校
     cursor.execute(f'''
     SELECT DISTINCT s.院校名称, s.省份, s.专业组名称, s.投档线, s.最低投档排名,
-           i.性质, i.考研, i.行业隶属
+           i.性质, i.考研, i.行业隶属, i.顶尖专业, i.特色专业
     FROM {table_name} s
     LEFT JOIN school_info i ON s.院校名称 = i.院校名称
     WHERE s.投档线 BETWEEN ? AND ?
@@ -159,7 +163,7 @@ def get_schools_by_score(score, group_type='physics'):
     # 查询"保"的院校
     cursor.execute(f'''
     SELECT DISTINCT s.院校名称, s.省份, s.专业组名称, s.投档线, s.最低投档排名,
-           i.性质, i.考研, i.行业隶属
+           i.性质, i.考研, i.行业隶属, i.顶尖专业, i.特色专业
     FROM {table_name} s
     LEFT JOIN school_info i ON s.院校名称 = i.院校名称
     WHERE s.投档线 <= ? AND s.投档线 >= ?
@@ -169,14 +173,13 @@ def get_schools_by_score(score, group_type='physics'):
     
     bao_schools = cursor.fetchall()
     
-    # 将结果转换为字典
     result = {
         'chong': [],
         'wen': [],
         'bao': []
     }
     
-    # 处理"冲"的院校
+    # 处理结果
     for school in chong_schools:
         tags = []
         if school[5]:  # 性质
@@ -186,6 +189,13 @@ def get_schools_by_score(score, group_type='physics'):
         if school[7]:  # 行业隶属
             tags.append(school[7])
             
+        # 处理专业信息
+        majors = []
+        if school[8]:  # 顶尖专业
+            majors = school[8].split('、')[:8]  # 最多取8个专业
+        elif school[9]:  # 特色专业
+            majors = school[9].split('、')[:8]  # 最多取8个专业
+            
         school_dict = {
             '院校名称': school[0],
             '省份': school[1],
@@ -193,6 +203,7 @@ def get_schools_by_score(score, group_type='physics'):
             '投档线': school[3],
             '最低投档排名': school[4],
             '标签': tags,
+            '推荐专业': majors,
             '类别': '冲'
         }
         result['chong'].append(school_dict)
@@ -203,9 +214,19 @@ def get_schools_by_score(score, group_type='physics'):
         if school[5]:  # 性质
             tags.extend(school[5].split(','))
         if school[6]:  # 考研
-            tags.append(school[6])
+            if school[6].isdigit():  # 如果是纯数字
+                tags.append(f"保研率{school[6]}%")
+            else:
+                tags.append(school[6])
         if school[7]:  # 行业隶属
             tags.append(school[7])
+            
+        # 添加专业信息处理
+        majors = []
+        if school[8]:  # 顶尖专业
+            majors = school[8].split('、')[:8]
+        elif school[9]:  # 特色专业
+            majors = school[9].split('、')[:8]
             
         school_dict = {
             '院校名称': school[0],
@@ -214,6 +235,7 @@ def get_schools_by_score(score, group_type='physics'):
             '投档线': school[3],
             '最低投档排名': school[4],
             '标签': tags,
+            '推荐专业': majors,
             '类别': '稳'
         }
         result['wen'].append(school_dict)
@@ -224,9 +246,19 @@ def get_schools_by_score(score, group_type='physics'):
         if school[5]:  # 性质
             tags.extend(school[5].split(','))
         if school[6]:  # 考研
-            tags.append(school[6])
+            if school[6].isdigit():  # 如果是纯数字
+                tags.append(f"保研率{school[6]}%")
+            else:
+                tags.append(school[6])
         if school[7]:  # 行业隶属
             tags.append(school[7])
+            
+        # 添加专业信息处理
+        majors = []
+        if school[8]:  # 顶尖专业
+            majors = school[8].split('、')[:8]
+        elif school[9]:  # 特色专业
+            majors = school[9].split('、')[:8]
             
         school_dict = {
             '院校名称': school[0],
@@ -235,6 +267,7 @@ def get_schools_by_score(score, group_type='physics'):
             '投档线': school[3],
             '最低投档排名': school[4],
             '标签': tags,
+            '推荐专业': majors,
             '类别': '保'
         }
         result['bao'].append(school_dict)

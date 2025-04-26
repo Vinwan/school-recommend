@@ -116,9 +116,22 @@ function displaySchoolCard(school, container) {
         majors.map(major => `<span class="major-tag">${major}</span>`).join('') :
         '<span class="no-majors">暂无推荐专业</span>';
 
+    // 处理标签，特别是保研率
+    const tags = school.标签 || [];
+    const tagsHtml = tags.map(tag => {
+        if (tag === '985') return '<span class="tag tag-985">985</span>';
+        if (tag === '211') return '<span class="tag tag-211">211</span>';
+        // 处理保研率标签
+        if (tag && !isNaN(tag)) {
+            return `<span class="tag tag-postgraduate">保研率${tag}%</span>`;
+        }
+        return `<span class="tag">${tag}</span>`;
+    }).join('');
+
     container.innerHTML += `
         <div class="school-card ${school.类别}-card">
             <h3>${school.院校名称}</h3>
+            ${tagsHtml ? `<div class="tags">${tagsHtml}</div>` : ''}
             <div class="school-info">
                 <p><strong>省份：</strong>${school.省份}</p>
                 <p><strong>专业组：</strong>${school.专业组名称}</p>
@@ -158,82 +171,3 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     `;
 });
-
-function displayResults(data) {
-    const resultsDiv = document.getElementById('results');
-    let html = '';
-    
-    // 处理"冲"的学校
-    if (data.chong && data.chong.length > 0) {
-        html += '<div class="school-category"><h2>冲刺院校</h2>';
-        data.chong.forEach(school => {
-            html += `
-                <div class="school-card">
-                    <h3>${school.院校名称}</h3>
-                    ${school.标签 && school.标签.length > 0 ? 
-                        `<div class="tags">${school.标签.map(tag => {
-                            if (tag === '985') return '<span class="tag tag-985">985</span>';
-                            if (tag === '211') return '<span class="tag tag-211">211</span>';
-                            // 处理保研标签，将数字提取出来并格式化
-                            if (tag && !isNaN(tag)) {
-                                return `<span class="tag tag-postgraduate">保研率${tag}%</span>`;
-                            }
-                            return `<span class="tag">${tag}</span>`;
-                        }).join('')}</div>` : ''}
-                    <div class="school-info">
-                        <p>省份：${school.省份}</p>
-                        <p>投档线：${school.投档线}</p>
-                        <p>最低投档排名：${school.最低投档排名}</p>
-                    </div>
-                </div>
-            `;
-        });
-        html += '</div>';
-    }
-    
-    // 处理"稳"的学校
-    if (data.wen && data.wen.length > 0) {
-        html += '<div class="school-category"><h2>稳妥院校</h2>';
-        data.wen.forEach(school => {
-            html += `
-                <div class="school-card">
-                    <h3>${school.院校名称}</h3>
-                    ${school.标签 && school.标签.length > 0 ? 
-                        `<div class="tags">${school.标签.map(tag => 
-                            `<span class="tag ${tag === '985' ? 'tag-985' : tag === '211' ? 'tag-211' : ''}">${tag}</span>`
-                        ).join('')}</div>` : ''}
-                    <div class="school-info">
-                        <p>省份：${school.省份}</p>
-                        <p>投档线：${school.投档线}</p>
-                        <p>最低投档排名：${school.最低投档排名}</p>
-                    </div>
-                </div>
-            `;
-        });
-        html += '</div>';
-    }
-    
-    // 处理"保"的学校
-    if (data.bao && data.bao.length > 0) {
-        html += '<div class="school-category"><h2>保底院校</h2>';
-        data.bao.forEach(school => {
-            html += `
-                <div class="school-card">
-                    <h3>${school.院校名称}</h3>
-                    ${school.标签 && school.标签.length > 0 ? 
-                        `<div class="tags">${school.标签.map(tag => 
-                            `<span class="tag ${tag === '985' ? 'tag-985' : tag === '211' ? 'tag-211' : ''}">${tag}</span>`
-                        ).join('')}</div>` : ''}
-                    <div class="school-info">
-                        <p>省份：${school.省份}</p>
-                        <p>投档线：${school.投档线}</p>
-                        <p>最低投档排名：${school.最低投档排名}</p>
-                    </div>
-                </div>
-            `;
-        });
-        html += '</div>';
-    }
-    
-    resultsDiv.innerHTML = html;
-}
